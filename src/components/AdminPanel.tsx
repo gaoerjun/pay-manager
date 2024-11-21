@@ -19,46 +19,25 @@ interface PaymentProof {
 }
 
 export function AdminPanel () {
-  const [settings, setSettings] = useState<Settings | null>(null)
-  const [proofs, setProofs] = useState<PaymentProof[]>([])
-  const [newAmount, setNewAmount] = useState('')
+  const [qrCodes, setQRCodes] = useState<Array<{ id: number, imageUrl: string }>>([]);
+  const [totalAmount, setTotalAmount] = useState('');
+  const [proofs, setProofs] = useState<Array<{ id: number, imageUrl: string }>>([]);
 
   useEffect(() => {
-    fetchSettings()
+    fetchQRCodes()
     fetchProofs()
   }, [])
 
-  const fetchSettings = () => {
-    fetch('/api/settings')
-      .then(res => res.json())
-      .then(data => setSettings(data))
-  }
+  const fetchQRCodes = async () => {
+    const response = await fetch('/api/settings');
+    const data = await response.json();
+    setQRCodes(data);
+  };
 
   const fetchProofs = () => {
     fetch('/api/payment-proofs')
       .then(res => res.json())
       .then(data => setProofs(data))
-  }
-
-  const handleQRCodeUpload = async (file: File) => {
-    const reader = new FileReader()
-    reader.onloadend = async () => {
-      const base64String = reader.result as string
-
-      await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          qrCodeImage: base64String,
-          totalAmount: settings?.totalAmount || 0
-        })
-      })
-
-      fetchSettings()
-      message.success('二维码上传成功')
-    }
-    reader.readAsDataURL(file)
-    return false
   }
 
   const handleProofUpload = async (file: File) => {
@@ -79,22 +58,24 @@ export function AdminPanel () {
     return false
   }
 
-  const updateAmount = async () => {
-    if (!newAmount) return
+  const handleQRCodeUpload = async (file: File) => {
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const base64String = reader.result as string
 
-    await fetch('/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        qrCodeImage: settings?.qrCodeImage || '',
-        totalAmount: parseFloat(newAmount)
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64String })
       })
-    })
 
-    fetchSettings()
-    setNewAmount('')
-    message.success('金额更新成功')
+      fetchQRCodes()
+      message.success('凭证上传成功')
+    }
+    reader.readAsDataURL(file)
+    return false
   }
+
 
   const handleDeleteProof = async (id: number) => {
     if (!confirm('确定要删除这条收款凭证吗？')) {
@@ -124,6 +105,36 @@ export function AdminPanel () {
     }
   };
 
+  const handleQRCodeDelete = async (id: number) => {
+    if (!confirm('确定要删除这个收款二维码吗？')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('删除失败');
+      }
+
+      // 更新显示的凭证列表
+      setQRCodes(qrcodes =>
+        qrcodes.filter(qr => qr.id !== id)
+      );
+    } catch (error) {
+      console.error('删除凭证时出错:', error);
+      alert('删除凭证失败，请重试');
+    }
+  };
+
+
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Title level={2}>后台管理</Title>
@@ -137,39 +148,35 @@ export function AdminPanel () {
               accept="image/*"
               maxCount={1}
               showUploadList={false}
+              className='mb-12'
             >
-              <Button icon={<UploadOutlined />}>上传二维码</Button>
+              <Button icon={<UploadOutlined />}>上传新二维码</Button>
             </Upload>
-          </div>
-          {settings?.qrCodeImage && (
-            <div className="mt-4">
-              <Image
-                src={settings.qrCodeImage}
-                alt="当前二维码"
-                width={200}
-                height={200}
+
+            <div className="grid grid-cols-3 gap-4">
+              <List
+                grid={{ gutter: 16, column: 3 }}
+                dataSource={qrCodes}
+                renderItem={(qr) => (
+                  <List.Item>
+                    <Card>
+                      <Image
+                        src={qr.image}
+                        alt={`qrcode ${qr.id}`}
+                        width="100%"
+                      />
+                      <Typography.Text type="secondary" className="mt-2 block">
+                        {new Date(qr.createdAt).toLocaleString()}
+                      </Typography.Text>
+                      <Button type="link" onClick={() => handleQRCodeDelete(qr.id)}>
+                        删除
+                      </Button>
+                    </Card>
+                  </List.Item>
+                )}
               />
             </div>
-          )}
-        </div>
-
-        <div>
-          <Typography.Text strong>总金额</Typography.Text>
-          <div className="mt-2 flex gap-2">
-            <Input
-              type="number"
-              value={newAmount}
-              onChange={(e) => setNewAmount(e.target.value)}
-              placeholder="输入新金额"
-              style={{ width: 200 }}
-            />
-            <Button type="primary" onClick={updateAmount}>
-              更新金额
-            </Button>
           </div>
-          <Typography.Text className="mt-2 block">
-            当前金额: ¥{settings?.totalAmount || 0}
-          </Typography.Text>
         </div>
       </Card>
 

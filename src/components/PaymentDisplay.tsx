@@ -41,28 +41,28 @@ export function PaymentDisplay () {
 
   return (
     <div className="container mx-auto p-8">
-      <Title className="text-center" style={{ textAlign: "center" }}>收款信息展示</Title>
-      <Typography.Title level={3} >
-        总收款金额: <span style={{ color: 'green' }}>¥{settings.totalAmount}</span>
-      </Typography.Title>
+      {/* <Title className="text-center" style={{ textAlign: "center" }}>收款信息展示</Title> */}
+      <div className="grid grid-cols-2 gap-8" style={{ display: 'flex', height: "calc(100vh - 30px)", }}>
+        <Card title="收款二维码" className='flex1' style={{ height: '100%' }}>
+          <div className='grid-box'>
+            {settings?.map(qrCode => {
+              return <div >
+                <img
+                  src={qrCode.image}
+                  alt="收款二维码"
+                  style={{ maxWidth: '100%', maxHeight: '100%', display: 'block', margin: '0 auto' }}
+                />
+              </div>
+            })
+            }
+          </div>
 
-      <div className="grid grid-cols-2 gap-8" style={{ display: 'flex', height: "calc(100vh - 150px)", }}>
-        <Card title="收款二维码" className='flex2' style={{ height: '100%', overflow: "hidden" }}>
-          {settings.qrCodeImage && (
-            <div style={{ height: '100%', overflow: "hidden" }}>
-              <img
-                src={settings.qrCodeImage}
-                alt="收款二维码"
-                style={{ maxHeight: '100%', maxWidth: '100%', display: 'block', margin: '0 auto' }}
-              />
-            </div>
-          )}
         </Card>
 
-        <Card title="收款凭证" className='flex3'>
+        <Card title="收款凭证" className='flex1'>
           <List
             dataSource={proofs}
-            style={{ maxHeight: "calc(100vh - 250px)", overflow: 'auto' }}
+            style={{ maxHeight: "calc(100vh - 130px)", overflow: 'auto' }}
             renderItem={(proof) => (
               <List.Item>
                 <Card>

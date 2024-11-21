@@ -3,32 +3,57 @@ import { db } from '../../../lib/db';
 
 export async function GET () {
   try {
-    const settings = db.prepare('SELECT * FROM settings WHERE id = 1').get();
-    return NextResponse.json({
-      qrCodeImage: settings.qr_code_image,
-      totalAmount: settings.total_amount
-    });
+    const proofs = db.prepare(`
+      SELECT 
+        id,
+        image,
+        created_at as createdAt
+      FROM qr_codes 
+      ORDER BY created_at DESC
+    `).all();
+
+    return NextResponse.json(proofs);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch proofs' }, { status: 500 });
   }
 }
-
 
 export async function POST (request: Request) {
   try {
     const body = await request.json();
-    const { qrCodeImage, totalAmount } = body;
+    const { image } = body;
 
-    const updateSettings = db.prepare(`
-      UPDATE settings 
-      SET qr_code_image = ?, total_amount = ?, updated_at = CURRENT_TIMESTAMP 
-      WHERE id = 1
+    const insertProof = db.prepare(`
+      INSERT INTO qr_codes (image)
+      VALUES (?)
     `);
 
-    updateSettings.run(qrCodeImage, totalAmount);
+    const result = insertProof.run(image);
+
+    return NextResponse.json({
+      id: result.lastInsertRowid,
+      image,
+      createdAt: new Date().toISOString()
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to create proof' }, { status: 500 });
+  }
+}
+
+export async function DELETE (request: Request) {
+  try {
+    console.log("delete,,,")
+    const { id } = await request.json();
+
+    const deleteProof = db.prepare('DELETE FROM qr_codes WHERE id = ?');
+    deleteProof.run(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
+    console.error('Error deleting payment proof:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete payment proof' },
+      { status: 500 }
+    );
   }
 }
