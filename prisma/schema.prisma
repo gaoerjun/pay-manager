@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Settings {
+  id            Int      @id @default(autoincrement())
+  qrCodeImage   String   // Base64 encoded image
+  totalAmount   Float
+  updatedAt     DateTime @updatedAt
+}
+
+model PaymentProof {
+  id        Int      @id @default(autoincrement())
+  image     String   // Base64 encoded image
+  createdAt DateTime @default(now())
+}
