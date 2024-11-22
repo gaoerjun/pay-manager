@@ -19,9 +19,9 @@ interface PaymentProof {
 }
 
 export function AdminPanel () {
-  const [qrCodes, setQRCodes] = useState<Array<{ id: number, imageUrl: string }>>([]);
+  const [qrCodes, setQRCodes] = useState<Array<{ id: number, image: string, createdAt: string }>>([]);
   const [totalAmount, setTotalAmount] = useState('');
-  const [proofs, setProofs] = useState<Array<{ id: number, imageUrl: string }>>([]);
+  const [proofs, setProofs] = useState<Array<{ id: number, image: string, createdAt: string }>>([]);
 
   useEffect(() => {
     fetchQRCodes()
