@@ -52,6 +52,9 @@ export function AdminPanel () {
       })
 
       fetchProofs()
+      setTimeout(() => {
+        fetchProofs()
+      }, 3000)
       message.success('凭证上传成功')
     }
     reader.readAsDataURL(file)
@@ -70,6 +73,9 @@ export function AdminPanel () {
       })
 
       fetchQRCodes()
+      setTimeout(() => {
+        fetchQRCodes()
+      }, 3000)
       message.success('凭证上传成功')
     }
     reader.readAsDataURL(file)
