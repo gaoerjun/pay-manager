@@ -6,8 +6,9 @@ import { Card, List, Image, Typography, Spin } from 'antd'
 const { Title } = Typography
 
 interface Settings {
-  qrCodeImage: string
-  totalAmount: number
+  id: number
+  image: string
+  createdAt: string
 }
 
 interface PaymentProof {
@@ -17,7 +18,7 @@ interface PaymentProof {
 }
 
 export function PaymentDisplay () {
-  const [settings, setSettings] = useState<Settings | null>(null)
+  const [settings, setSettings] = useState<Settings[]>([])
   const [proofs, setProofs] = useState<PaymentProof[]>([])
 
   useEffect(() => {
